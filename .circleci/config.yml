@@ -1,17 +1,33 @@
-version: 2.1
-orbs:
-  node: circleci/node@1.1.6
-jobs:
-  build-and-test:
-    executor:
-      name: node/default
+version: 2
+jobs: # What the server can do?
+  build: # 1. build a docker image to run tasks
+    docker:
+      - image: circleci/node:12.16.0
+    steps: # tasks
+      - checkout
+      - run: echo "npm installing"
+      - run: npm install
+      - run: CI=true npm run build #env variable CI     
+  test: # 2. pass all the test before someone check my PR
+    docker:
+      - image: circleci/node:12.16.0
     steps:
       - checkout
-      - node/with-cache:
-          steps:
-            - run: npm install
-            - run: npm test
+      - run: echo "testing stuff"
+      - run: npm install
+      - run: npm test
+  hithere: # 3. echo hello
+    docker:
+      - image: circleci/node:12.16.0
+    steps:
+      - checkout
+      - run: echo "hellloooo!" 
 workflows:
-    build-and-test:
-      jobs:
-        - build-and-test
+  version: 2
+  build_test_lint:
+    jobs: #run build, hithere in parallel
+      - build
+      - hithere
+      - test: #test will run after hithere finish
+          requires:
+            - hithere
